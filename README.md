@@ -9,9 +9,9 @@ A Pipecat AI voice agent built with a cascade pipeline (STT → LLM → TTS).
 - **Pipeline**: Cascade
   - **STT**: Deepgram Nova-3, Australian English (`en-AU`)
   - **LLM**: OpenAI
-  - **TTS**: Deepgram Aura-2, Australian voice (`aura-2-theia-en`)
+  - **TTS**: Deepgram Flux TTS, Australian voice (`flux-sharon-en`)
 - **Turn detection**: Pipecat defaults (Silero VAD + local smart-turn)
-- **Conversation**: a 4-node Pipecat Flow in `server/flow.py`
+- **Conversation**: a 4-node Pipecat Flow, written as YAML in `server/flow.yaml`
 - **Features**:
   - Transcription
   - Krisp Noise Cancellation
@@ -99,7 +99,8 @@ Recordings land in `server/eval-runs/recordings/`.
 car-support-agent/
 ├── server/              # Python bot server
 │   ├── bot.py           # Main bot implementation
-│   ├── flow.py          # Front desk conversation flow
+│   ├── flow.yaml        # Front desk conversation flow (nodes, prompts, transitions)
+│   ├── handlers.py      # The Python tool the flow calls
 │   ├── evals/           # Audio eval scenarios and their cloud services
 │   ├── pyproject.toml   # Python dependencies
 │   ├── env.example      # Environment variables template
