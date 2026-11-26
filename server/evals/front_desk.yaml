@@ -108,3 +108,18 @@ scenarios:
           - event: response
             eval: "says the booking is held until 6 pm today"
             within_ms: 45000
+
+  # The caller says goodbye: the bot says its goodbye line and hangs up.
+  - name: goodbye_hangs_up
+    turns:
+      - expect:
+          - event: response
+            eval: "the bot greets the caller or offers to help"
+
+      - user: "Actually, never mind, I've sorted it out. Thanks, goodbye."
+        expect:
+          - event: function_call
+            calls:
+              - name: end_call
+          - event: response
+            text_matches: "(?i)thanks for calling.*goodbye"

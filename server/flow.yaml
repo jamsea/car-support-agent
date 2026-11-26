@@ -2,7 +2,8 @@
 #
 #   greeting -> card_check -> card_policy
 #
-# transfer_to_human is a global function, so every node can go to `transfer`.
+# transfer_to_human and end_call are global functions, so every node can go
+# to `transfer` (caller asks for a person) or `goodbye` (caller says goodbye).
 initial_node: greeting
 
 nodes:
@@ -15,6 +16,8 @@ nodes:
       or special characters. Stay calm and polite, even if the caller is upset.
       If the caller ever asks for a person, a human, a manager or a transfer,
       call transfer_to_human straight away and say nothing yourself.
+      If the caller says goodbye or says they are done, call end_call straight
+      away and say nothing yourself.
       The store is open 9 am to 5 pm, Tuesday to Sunday, and closed on Mondays.
       The call started on {{ call_started_at }}, store local time. Use that
       when the caller asks about today, tomorrow or opening hours.
@@ -66,7 +69,24 @@ nodes:
       - type: end_conversation
         text: One moment, I'll transfer you now.
 
+  goodbye:
+    task_messages:
+      - role: developer
+        content: The caller said goodbye. Say nothing.
+    respond_immediately: false
+    pre_actions:
+      - type: end_conversation
+        text: Thanks for calling. Goodbye!
+
 global_functions:
+  - name: end_call
+    transition_only: true
+    description: >
+      Hang up the call. Call this when the caller says goodbye, or says they
+      are done and have nothing else to ask. Do not say anything yourself,
+      just call this function. Do not call it if they ask for a person; use
+      transfer_to_human for that.
+    transition_to: goodbye
   - name: transfer_to_human
     transition_only: true
     description: >
