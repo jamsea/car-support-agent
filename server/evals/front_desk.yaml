@@ -74,3 +74,37 @@ scenarios:
               - name: transfer_to_human
           - event: response
             text_matches: "(?i)one moment.*transfer you now"
+
+  # A slow lookup: the bot should say it is still checking while the caller
+  # waits (WaitReassuranceLLMExtension), then give the answer.
+  - name: slow_lookup_reassurance
+    turns:
+      - expect:
+          - event: response
+            eval: "the bot greets the caller or offers to help"
+
+      - user: "Hi, I'm at the front desk and they won't give me my rental car. Why not?"
+        expect:
+          - event: flow_node
+            text_matches: "^card_check$"
+          - event: response
+            eval: "the bot asks whether the caller brought a physical card with them"
+
+      - user: "No, I didn't bring one."
+        expect:
+          - event: flow_node
+            text_matches: "^card_policy$"
+          - event: response
+            eval: "the bot explains that the caller needs to provide a physical card to get a rental car"
+
+      - user: "Okay. Can you check if my booking is still being held?"
+        expect:
+          - event: function_call
+            calls:
+              - name: check_booking_hold
+          - event: response
+            eval: "says it is checking or still checking on the booking, reporting no result"
+            allow_continue: false
+          - event: response
+            eval: "says the booking is held until 6 pm today"
+            within_ms: 45000

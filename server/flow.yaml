@@ -15,6 +15,9 @@ nodes:
       or special characters. Stay calm and polite, even if the caller is upset.
       If the caller ever asks for a person, a human, a manager or a transfer,
       call transfer_to_human straight away and say nothing yourself.
+      The store is open 9 am to 5 pm, Tuesday to Sunday, and closed on Mondays.
+      The call started on {{ call_started_at }}, store local time. Use that
+      when the caller asks about today, tomorrow or opening hours.
     task_messages:
       - role: developer
         content: >
@@ -48,7 +51,11 @@ nodes:
           card, explain that they need to provide a physical card to get a
           rental car, so the desk cannot hand over the car without one. If
           they do have a physical card with them, tell them to show it to the
-          staff at the front desk. Answer any follow-up questions briefly.
+          staff at the front desk. Answer any follow-up questions briefly. If
+          they ask whether their booking or car is still being held, call
+          check_booking_hold and tell them what it says.
+    functions:
+      - name: check_booking_hold
 
   transfer:
     task_messages:

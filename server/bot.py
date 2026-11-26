@@ -24,7 +24,9 @@ Run the bot using::
 """
 
 import os
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -48,6 +50,7 @@ from pipecat.services.openai.llm import OpenAILLMService
 from pipecat.transcriptions.language import Language
 from pipecat.transports.base_transport import BaseTransport, TransportParams
 from pipecat.transports.daily.transport import DailyParams
+from pipecat.turns.wait_reassurance.llm_extension import WaitReassuranceLLMExtension
 from pipecat.workers.runner import WorkerRunner
 
 import handlers
@@ -56,6 +59,9 @@ from deepgram_llm import DeepgramLLMService
 load_dotenv(override=True)
 
 FLOW_CONFIG_PATH = Path(__file__).with_name("flow.yaml")
+
+# The store's time zone, used to tell the LLM the date and time of the call.
+STORE_TIMEZONE = ZoneInfo(os.getenv("STORE_TIMEZONE") or "Australia/Sydney")
 
 
 async def run_bot(transport: BaseTransport, llm_choice: str = "openai"):
@@ -84,14 +90,23 @@ async def run_bot(transport: BaseTransport, llm_choice: str = "openai"):
     )
 
     # LLM service
+    # While a slow tool call is running (check_booking_hold in handlers.py) and
+    # nothing has been said for a few seconds, the LLM says a short "still
+    # checking" line, or chooses to stay quiet.
+    wait_reassurance = WaitReassuranceLLMExtension(interval_secs=6.0)
+
     if llm_choice == "phonellm":
         # phoneLLM mini, hosted by Deepgram. Uses the Deepgram API key.
-        llm = DeepgramLLMService(api_key=os.getenv("DEEPGRAM_API_KEY"))
+        llm = DeepgramLLMService(
+            api_key=os.getenv("DEEPGRAM_API_KEY"),
+            settings=DeepgramLLMService.Settings(extensions=[wait_reassurance]),
+        )
     else:
         llm = OpenAILLMService(
             api_key=os.getenv("OPENAI_API_KEY"),
             settings=OpenAILLMService.Settings(
                 model=os.getenv("OPENAI_MODEL") or "gpt-4.1",
+                extensions=[wait_reassurance],
             ),
         )
     logger.info(f"LLM: {llm_choice}")
@@ -142,6 +157,9 @@ async def run_bot(transport: BaseTransport, llm_choice: str = "openai"):
     @worker.rtvi.event_handler("on_client_ready")
     async def on_client_ready(rtvi):
         # Kick off the conversation at the first node of the flow
+        # flow.yaml's role_message refers to this as {{ call_started_at }}.
+        now = datetime.now(STORE_TIMEZONE)
+        flow_manager.state["call_started_at"] = now.strftime("%A %d %B %Y at %I:%M %p")
         await flow_manager.initialize(flow.initial_node)
 
     @transport.event_handler("on_client_connected")
