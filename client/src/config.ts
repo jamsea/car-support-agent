@@ -34,11 +34,6 @@ const botStartUrl =
   import.meta.env.VITE_BOT_START_URL ||
   (import.meta.env.DEV ? 'http://localhost:7860/start' : cloudStartUrl);
 
-/** A local bot needs no key, so the key box is hidden for it. */
-export const NEEDS_PUBLIC_KEY = !['localhost', '127.0.0.1'].includes(
-  new URL(botStartUrl).hostname
-);
-
 function saveKey(key: string) {
   try {
     localStorage.setItem(KEY_STORAGE, key);
@@ -50,7 +45,7 @@ function saveKey(key: string) {
 // The key comes from the link (#key=pk_...), or from the last visit, or from
 // VITE_BOT_START_PUBLIC_API_KEY. A key in the link wins. It sits after the "#"
 // so it is never sent to a server, and it is wiped from the URL bar once read
-// so it does not show in a screen share.
+// so it does not show in a screen share. There is no box to type it in.
 function readInitialKey(): string {
   const hash = new URLSearchParams(window.location.hash.slice(1));
   const fromLink = hash.get('key');
@@ -76,27 +71,12 @@ function readInitialKey(): string {
   return stored || import.meta.env.VITE_BOT_START_PUBLIC_API_KEY || '';
 }
 
-// One Headers object shared by every start request. It is changed in place, so
-// typing a new key does not rebuild the Pipecat client.
-const headers = new Headers();
-
-function applyKey(key: string) {
-  const trimmed = key.trim();
-  if (trimmed) {
-    headers.set('Authorization', `Bearer ${trimmed}`);
-  } else {
-    headers.delete('Authorization');
-  }
-}
-
-export const INITIAL_PUBLIC_KEY = readInitialKey();
-applyKey(INITIAL_PUBLIC_KEY);
-
-/** Use a new Pipecat Cloud public key for the next connect, and remember it. */
-export function setPublicKey(key: string) {
-  applyKey(key);
-  saveKey(key);
-}
+// The Pipecat Cloud public key is sent as a Bearer token. A local bot needs
+// no key, so the header is left off when there is none.
+const publicKey = readInitialKey().trim();
+const headers = publicKey
+  ? new Headers({ Authorization: `Bearer ${publicKey}` })
+  : undefined;
 
 export type LlmChoice = 'openai' | 'gemini';
 

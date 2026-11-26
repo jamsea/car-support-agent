@@ -130,21 +130,21 @@ One-time setup:
 2. Push this repo to GitHub and turn on Pages (Settings > Pages > Source: GitHub Actions).
 3. If the repo is not named `car-support-agent`, change `base` in `client/vite.config.ts`.
 
-The page then lives at `https://<your-user>.github.io/car-support-agent/`. Paste a
-Pipecat Cloud public key (`pk_...`) into the box at the top and click Connect. Make
-a key in the Pipecat Cloud dashboard under Settings > API Keys > Public.
-
-To share it, put the key in the link. The page fills the box for you:
+The page then lives at `https://<your-user>.github.io/car-support-agent/`. It needs a
+Pipecat Cloud public key (`pk_...`), and the only way to give it one is in the link:
 
 ```
 https://<your-user>.github.io/car-support-agent/#key=pk_...
 ```
 
+The page reads the key, removes it from the URL bar, and remembers it in that browser
+for next time. Make a key in the Pipecat Cloud dashboard under Settings > API Keys > Public.
+
 Anyone with that link can start calls on your account. Make one key per person,
 and revoke it when they are done.
 
 Add `?agent=<name>` to the link if your agent has another name. `npm run dev`
-still talks to the local bot and shows no key box.
+still talks to the local bot and needs no key.
 
 ## Deploying to Pipecat Cloud
 

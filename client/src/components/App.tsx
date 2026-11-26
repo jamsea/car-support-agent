@@ -5,18 +5,14 @@ import {
   ConnectButton,
   ConversationPanel,
   EventsPanel,
-  Input,
   UserAudioControl,
 } from '@pipecat-ai/voice-ui-kit';
 
 import {
   DEFAULT_LLM,
   DEFAULT_VOICE,
-  INITIAL_PUBLIC_KEY,
   LLM_LABELS,
-  NEEDS_PUBLIC_KEY,
   setLlm,
-  setPublicKey,
   setVoice,
   VOICE_LABELS,
 } from '../config';
@@ -42,7 +38,6 @@ export const App = ({
     client?.initDevices();
   }, [client]);
 
-  const [publicKey, setKey] = useState(INITIAL_PUBLIC_KEY);
   const [llm, setLlmChoice] = useState<LlmChoice>(DEFAULT_LLM);
   const [voice, setVoiceChoice] = useState<VoiceChoice>(DEFAULT_VOICE);
 
@@ -61,21 +56,6 @@ export const App = ({
           <div /> /* Spacer */
         )}
         <div className="flex items-center gap-4">
-          {NEEDS_PUBLIC_KEY && (
-            <Input
-              type="password"
-              autoComplete="off"
-              spellCheck={false}
-              aria-label="Pipecat Cloud public API key"
-              placeholder="Pipecat Cloud key (pk_...)"
-              className="w-56"
-              value={publicKey}
-              onChange={(event) => {
-                setKey(event.target.value);
-                setPublicKey(event.target.value);
-              }}
-            />
-          )}
           <OptionSelect
             guide="LLM"
             labels={LLM_LABELS}
