@@ -11,13 +11,17 @@ import {
 
 import {
   DEFAULT_LLM,
+  DEFAULT_VOICE,
   INITIAL_PUBLIC_KEY,
+  LLM_LABELS,
   NEEDS_PUBLIC_KEY,
   setLlm,
   setPublicKey,
+  setVoice,
+  VOICE_LABELS,
 } from '../config';
-import type { LlmChoice, TransportType } from '../config';
-import { LlmSelect } from './LlmSelect';
+import type { LlmChoice, TransportType, VoiceChoice } from '../config';
+import { OptionSelect } from './OptionSelect';
 import { TransportSelect } from './TransportSelect';
 
 interface AppProps extends PipecatBaseChildProps {
@@ -40,6 +44,7 @@ export const App = ({
 
   const [publicKey, setKey] = useState(INITIAL_PUBLIC_KEY);
   const [llm, setLlmChoice] = useState<LlmChoice>(DEFAULT_LLM);
+  const [voice, setVoiceChoice] = useState<VoiceChoice>(DEFAULT_VOICE);
 
   const showTransportSelector = availableTransports.length > 1;
 
@@ -71,11 +76,22 @@ export const App = ({
               }}
             />
           )}
-          <LlmSelect
-            llm={llm}
-            onLlmChange={(choice) => {
+          <OptionSelect
+            guide="LLM"
+            labels={LLM_LABELS}
+            value={llm}
+            onChange={(choice) => {
               setLlmChoice(choice);
               setLlm(choice);
+            }}
+          />
+          <OptionSelect
+            guide="Voice"
+            labels={VOICE_LABELS}
+            value={voice}
+            onChange={(choice) => {
+              setVoiceChoice(choice);
+              setVoice(choice);
             }}
           />
           <UserAudioControl size="lg" />

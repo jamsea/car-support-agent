@@ -19,6 +19,5 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Copy the application code
 COPY ./server/bot.py bot.py
-COPY ./server/deepgram_llm.py deepgram_llm.py
 COPY ./server/handlers.py handlers.py
 COPY ./server/flow.yaml flow.yaml

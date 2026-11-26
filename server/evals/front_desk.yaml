@@ -103,7 +103,7 @@ scenarios:
             calls:
               - name: check_booking_hold
           - event: response
-            eval: "says it is checking or still checking on the booking, reporting no result"
+            eval: "tells the caller, in any wording, that the booking lookup is still under way, and gives no result yet"
             allow_continue: false
           - event: response
             eval: "says the booking is held until 6 pm today"

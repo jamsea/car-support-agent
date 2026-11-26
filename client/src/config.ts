@@ -98,22 +98,39 @@ export function setPublicKey(key: string) {
   saveKey(key);
 }
 
-export type LlmChoice = 'openai' | 'phonellm';
+export type LlmChoice = 'openai' | 'gemini';
 
 export const LLM_LABELS: Record<LlmChoice, string> = {
+  gemini: 'Gemini',
   openai: 'OpenAI',
-  phonellm: 'phoneLLM',
 };
 
-export const DEFAULT_LLM: LlmChoice = 'openai';
+export const DEFAULT_LLM: LlmChoice = 'gemini';
+
+export type VoiceChoice = 'flux-sharon-en' | 'aura-2-theia-en';
+
+export const VOICE_LABELS: Record<VoiceChoice, string> = {
+  'flux-sharon-en': 'Sharon',
+  'aura-2-theia-en': 'Theia',
+};
+
+export const DEFAULT_VOICE: VoiceChoice = 'flux-sharon-en';
 
 // Sent to the bot as the start request's `body`. Like `headers`, it is one
-// object changed in place, so picking an LLM does not rebuild the client.
-const startBody: { llm: LlmChoice } = { llm: DEFAULT_LLM };
+// object changed in place, so picking an option does not rebuild the client.
+const startBody: { llm: LlmChoice; voice: VoiceChoice } = {
+  llm: DEFAULT_LLM,
+  voice: DEFAULT_VOICE,
+};
 
 /** Use this LLM for the next call. */
 export function setLlm(llm: LlmChoice) {
   startBody.llm = llm;
+}
+
+/** Use this voice for the next call. */
+export function setVoice(voice: VoiceChoice) {
+  startBody.voice = voice;
 }
 
 const dailyConfig: APIRequest = {

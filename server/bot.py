@@ -15,8 +15,8 @@ tool is in handlers.py.
 
 Required AI services:
 - Deepgram Nova-3, Australian English (Speech-to-Text)
-- OpenAI, or phoneLLM mini hosted by Deepgram (LLM)
-- Deepgram Flux TTS, Australian voice (Text-to-Speech)
+- OpenAI or Google Gemini (LLM)
+- Deepgram Flux TTS or Aura-2, Australian voices (Text-to-Speech)
 
 Run the bot using::
 
@@ -46,6 +46,8 @@ from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
 from pipecat.services.deepgram.flux.tts import DeepgramFluxTTSService
 from pipecat.services.deepgram.stt import DeepgramSTTService
+from pipecat.services.deepgram.tts import DeepgramTTSService
+from pipecat.services.google.llm import GoogleLLMService
 from pipecat.services.openai.llm import OpenAILLMService
 from pipecat.transcriptions.language import Language
 from pipecat.transports.base_transport import BaseTransport, TransportParams
@@ -54,17 +56,20 @@ from pipecat.turns.wait_reassurance.llm_extension import WaitReassuranceLLMExten
 from pipecat.workers.runner import WorkerRunner
 
 import handlers
-from deepgram_llm import DeepgramLLMService
 
 load_dotenv(override=True)
 
 FLOW_CONFIG_PATH = Path(__file__).with_name("flow.yaml")
 
+# What the dropdowns on the web page can pick. The first of each is the default.
+LLM_CHOICES = ("gemini", "openai")
+VOICES = ("flux-sharon-en", "aura-2-theia-en")
+
 # The store's time zone, used to tell the LLM the date and time of the call.
 STORE_TIMEZONE = ZoneInfo(os.getenv("STORE_TIMEZONE") or "Australia/Sydney")
 
 
-async def run_bot(transport: BaseTransport, llm_choice: str = "openai"):
+async def run_bot(transport: BaseTransport, llm_choice: str, voice: str):
     """Main bot logic."""
     logger.info("Starting bot")
 
@@ -77,17 +82,19 @@ async def run_bot(transport: BaseTransport, llm_choice: str = "openai"):
         ),
     )
 
-    # Text-to-Speech service
-    tts = DeepgramFluxTTSService(
+    # Text-to-Speech service. Both voices are Australian. Flux voices and Aura
+    # voices use different Deepgram services.
+    tts_service = DeepgramTTSService if voice.startswith("aura-") else DeepgramFluxTTSService
+    tts = tts_service(
         api_key=os.getenv("DEEPGRAM_API_KEY"),
-        settings=DeepgramFluxTTSService.Settings(
-            # flux-sharon-en is the Australian Flux TTS voice
-            voice=os.getenv("DEEPGRAM_VOICE_ID") or "flux-sharon-en",
+        settings=tts_service.Settings(
+            voice=voice,
             language=Language.EN_AU,
-            # A bit faster than the default pace. Range is 0.5 to 1.5, in steps of 0.05.
+            # A bit faster than the default pace.
             speed=1.15,
         ),
     )
+    logger.info(f"Voice: {voice}")
 
     # LLM service
     # While a slow tool call is running (check_booking_hold in handlers.py) and
@@ -95,11 +102,14 @@ async def run_bot(transport: BaseTransport, llm_choice: str = "openai"):
     # checking" line, or chooses to stay quiet.
     wait_reassurance = WaitReassuranceLLMExtension(interval_secs=6.0)
 
-    if llm_choice == "phonellm":
-        # phoneLLM mini, hosted by Deepgram. Uses the Deepgram API key.
-        llm = DeepgramLLMService(
-            api_key=os.getenv("DEEPGRAM_API_KEY"),
-            settings=DeepgramLLMService.Settings(extensions=[wait_reassurance]),
+    if llm_choice == "gemini":
+        llm = GoogleLLMService(
+            api_key=os.getenv("GOOGLE_API_KEY"),
+            settings=GoogleLLMService.Settings(
+                # Flash-Lite is Gemini's small, low-latency model.
+                model=os.getenv("GEMINI_MODEL") or "gemini-3.5-flash-lite",
+                extensions=[wait_reassurance],
+            ),
         )
     else:
         llm = OpenAILLMService(
@@ -218,12 +228,18 @@ async def bot(runner_args: RunnerArguments):
     }
 
     transport = await create_transport(runner_args, transport_params)
-    # The web client sends {"llm": "openai" | "phonellm"} in the start request.
-    # LLM_SERVICE sets the default, which is also what the evals use.
+    # The web client sends {"llm": ..., "voice": ...} in the start request.
+    # LLM_SERVICE and DEEPGRAM_VOICE_ID set the defaults, which the evals use.
+    # Anything not on the lists falls back to the default.
     body = runner_args.body if isinstance(runner_args.body, dict) else {}
-    llm_choice = body.get("llm") or os.getenv("LLM_SERVICE") or "openai"
+    llm_choice = body.get("llm") or os.getenv("LLM_SERVICE")
+    if llm_choice not in LLM_CHOICES:
+        llm_choice = LLM_CHOICES[0]
+    voice = body.get("voice") or os.getenv("DEEPGRAM_VOICE_ID")
+    if voice not in VOICES:
+        voice = VOICES[0]
 
-    await run_bot(transport, llm_choice)
+    await run_bot(transport, llm_choice, voice)
 
 
 if __name__ == "__main__":
