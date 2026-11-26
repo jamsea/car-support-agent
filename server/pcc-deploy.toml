@@ -1,0 +1,8 @@
+agent_name = "car-support-agent"
+secret_set = "car-support-agent-secrets"
+agent_profile = "agent-1x"
+[krisp_viva]
+	audio_filter = "tel"
+
+[scaling]
+	min_agents = 1

@@ -1,0 +1,84 @@
+import { useEffect, useState } from 'react';
+
+import type { PipecatBaseChildProps } from '@pipecat-ai/voice-ui-kit';
+import {
+  ConnectButton,
+  ConversationPanel,
+  EventsPanel,
+  Input,
+  UserAudioControl,
+} from '@pipecat-ai/voice-ui-kit';
+
+import { INITIAL_PUBLIC_KEY, NEEDS_PUBLIC_KEY, setPublicKey } from '../config';
+import type { TransportType } from '../config';
+import { TransportSelect } from './TransportSelect';
+
+interface AppProps extends PipecatBaseChildProps {
+  transportType: TransportType;
+  onTransportChange: (type: TransportType) => void;
+  availableTransports: TransportType[];
+}
+
+export const App = ({
+  client,
+  handleConnect,
+  handleDisconnect,
+  transportType,
+  onTransportChange,
+  availableTransports,
+}: AppProps) => {
+  useEffect(() => {
+    client?.initDevices();
+  }, [client]);
+
+  const [publicKey, setKey] = useState(INITIAL_PUBLIC_KEY);
+
+  const showTransportSelector = availableTransports.length > 1;
+
+  return (
+    <div className="flex flex-col w-full h-full">
+      <div className="flex items-center justify-between gap-4 p-4">
+        {showTransportSelector ? (
+          <TransportSelect
+            transportType={transportType}
+            onTransportChange={onTransportChange}
+            availableTransports={availableTransports}
+          />
+        ) : (
+          <div /> /* Spacer */
+        )}
+        <div className="flex items-center gap-4">
+          {NEEDS_PUBLIC_KEY && (
+            <Input
+              type="password"
+              autoComplete="off"
+              spellCheck={false}
+              aria-label="Pipecat Cloud public API key"
+              placeholder="Pipecat Cloud key (pk_...)"
+              className="w-56"
+              value={publicKey}
+              onChange={(event) => {
+                setKey(event.target.value);
+                setPublicKey(event.target.value);
+              }}
+            />
+          )}
+          <UserAudioControl size="lg" />
+          <ConnectButton
+            size="lg"
+            onConnect={handleConnect}
+            onDisconnect={handleDisconnect}
+          />
+        </div>
+      </div>
+      <div className="flex-1 overflow-hidden px-4">
+        <div className="h-full overflow-hidden">
+          <ConversationPanel />
+        </div>
+      </div>
+      <div className="h-96 overflow-hidden px-4 pb-4">
+        <EventsPanel />
+      </div>
+    </div>
+  );
+};

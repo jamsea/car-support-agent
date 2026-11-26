@@ -1,0 +1,76 @@
+# Audio evals for the front desk flow.
+#
+# Run from server/ with the bot already up (uv run bot.py):
+#   uv run python -m pipecat.evals run evals/front_desk.yaml -v -a
+#
+# Both sides are real audio. The caller's lines are spoken by Deepgram Aura-2
+# (Australian voice), the bot's speech is transcribed by Deepgram Nova-3 (en-AU),
+# and OpenAI judges each `eval:` check. See evals/services.py.
+name: front_desk
+
+user:
+  modality: audio
+  speech:
+    factory: evals.services.caller_voice
+    voice: aura-2-hyperion-en
+
+judge:
+  modality: audio
+  transcription:
+    factory: evals.services.transcriber
+  eval:
+    factory: evals.services.judge
+    model: gpt-4.1
+
+scenarios:
+  # The main path: no card, then an angry request for a person.
+  # There is no flow_node check on the transfer node: its end_conversation
+  # pre-action queues the EndFrame before Flows reports the node, so that
+  # report never reaches the harness. The function call and the spoken line
+  # cover it instead.
+  - name: no_card_then_transfer
+    turns:
+      - expect:
+          - event: response
+            eval: "the bot greets the caller or offers to help"
+
+      - user: "Hi, I'm standing at the front desk and they won't give me my rental car. Why not?"
+        expect:
+          - event: flow_node
+            text_matches: "^card_check$"
+          - event: response
+            eval: "the bot asks whether the caller brought a physical card with them"
+
+      - user: "No, I didn't bring one."
+        expect:
+          - event: function_call
+            calls:
+              - name: record_card_answer
+                args: { has_card: false }
+          - event: flow_node
+            text_matches: "^card_policy$"
+          - event: response
+            eval: "the bot explains that the caller needs to provide a physical card to get a rental car"
+
+      - user: "That is ridiculous! I've had enough of this. Transfer me to a real person right now!"
+        expect:
+          - event: function_call
+            calls:
+              - name: transfer_to_human
+          - event: response
+            text_matches: "(?i)one moment.*transfer you now"
+
+  # "If they're ever asked": a transfer request on the very first turn.
+  - name: transfer_on_first_turn
+    turns:
+      - expect:
+          - event: response
+            eval: "the bot greets the caller or offers to help"
+
+      - user: "I don't want to talk to a robot. Put me through to a person, please."
+        expect:
+          - event: function_call
+            calls:
+              - name: transfer_to_human
+          - event: response
+            text_matches: "(?i)one moment.*transfer you now"
