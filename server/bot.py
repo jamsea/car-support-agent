@@ -78,6 +78,8 @@ async def run_bot(transport: BaseTransport, llm_choice: str = "openai"):
             # flux-sharon-en is the Australian Flux TTS voice
             voice=os.getenv("DEEPGRAM_VOICE_ID") or "flux-sharon-en",
             language=Language.EN_AU,
+            # A bit faster than the default pace. Range is 0.5 to 1.5, in steps of 0.05.
+            speed=1.15,
         ),
     )
 
