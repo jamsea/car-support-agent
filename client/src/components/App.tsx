@@ -10,13 +10,10 @@ import {
 
 import {
   DEFAULT_LLM,
-  DEFAULT_VOICE,
   LLM_LABELS,
   setLlm,
-  setVoice,
-  VOICE_LABELS,
 } from '../config';
-import type { LlmChoice, TransportType, VoiceChoice } from '../config';
+import type { LlmChoice, TransportType } from '../config';
 import { OptionSelect } from './OptionSelect';
 import { TransportSelect } from './TransportSelect';
 
@@ -39,7 +36,6 @@ export const App = ({
   }, [client]);
 
   const [llm, setLlmChoice] = useState<LlmChoice>(DEFAULT_LLM);
-  const [voice, setVoiceChoice] = useState<VoiceChoice>(DEFAULT_VOICE);
 
   const showTransportSelector = availableTransports.length > 1;
 
@@ -63,15 +59,6 @@ export const App = ({
             onChange={(choice) => {
               setLlmChoice(choice);
               setLlm(choice);
-            }}
-          />
-          <OptionSelect
-            guide="Voice"
-            labels={VOICE_LABELS}
-            value={voice}
-            onChange={(choice) => {
-              setVoiceChoice(choice);
-              setVoice(choice);
             }}
           />
           <UserAudioControl size="lg" />
