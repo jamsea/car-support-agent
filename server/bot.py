@@ -15,7 +15,7 @@ tool is in handlers.py.
 
 Required AI services:
 - Deepgram Nova-3, Australian English (Speech-to-Text)
-- Openai (LLM)
+- OpenAI, or phoneLLM mini hosted by Deepgram (LLM)
 - Deepgram Flux TTS, Australian voice (Text-to-Speech)
 
 Run the bot using::
@@ -51,13 +51,14 @@ from pipecat.transports.daily.transport import DailyParams
 from pipecat.workers.runner import WorkerRunner
 
 import handlers
+from deepgram_llm import DeepgramLLMService
 
 load_dotenv(override=True)
 
 FLOW_CONFIG_PATH = Path(__file__).with_name("flow.yaml")
 
 
-async def run_bot(transport: BaseTransport):
+async def run_bot(transport: BaseTransport, llm_choice: str = "openai"):
     """Main bot logic."""
     logger.info("Starting bot")
 
@@ -81,12 +82,17 @@ async def run_bot(transport: BaseTransport):
     )
 
     # LLM service
-    llm = OpenAILLMService(
-        api_key=os.getenv("OPENAI_API_KEY"),
-        settings=OpenAILLMService.Settings(
-            model=os.getenv("OPENAI_MODEL") or "gpt-4.1",
-        ),
-    )
+    if llm_choice == "phonellm":
+        # phoneLLM mini, hosted by Deepgram. Uses the Deepgram API key.
+        llm = DeepgramLLMService(api_key=os.getenv("DEEPGRAM_API_KEY"))
+    else:
+        llm = OpenAILLMService(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            settings=OpenAILLMService.Settings(
+                model=os.getenv("OPENAI_MODEL") or "gpt-4.1",
+            ),
+        )
+    logger.info(f"LLM: {llm_choice}")
 
     # No user_turn_strategies here, so Pipecat's defaults apply: VAD starts a turn
     # and the local smart-turn model ends it.
@@ -192,7 +198,12 @@ async def bot(runner_args: RunnerArguments):
     }
 
     transport = await create_transport(runner_args, transport_params)
-    await run_bot(transport)
+    # The web client sends {"llm": "openai" | "phonellm"} in the start request.
+    # LLM_SERVICE sets the default, which is also what the evals use.
+    body = runner_args.body if isinstance(runner_args.body, dict) else {}
+    llm_choice = body.get("llm") or os.getenv("LLM_SERVICE") or "openai"
+
+    await run_bot(transport, llm_choice)
 
 
 if __name__ == "__main__":

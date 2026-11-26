@@ -9,8 +9,15 @@ import {
   UserAudioControl,
 } from '@pipecat-ai/voice-ui-kit';
 
-import { INITIAL_PUBLIC_KEY, NEEDS_PUBLIC_KEY, setPublicKey } from '../config';
-import type { TransportType } from '../config';
+import {
+  DEFAULT_LLM,
+  INITIAL_PUBLIC_KEY,
+  NEEDS_PUBLIC_KEY,
+  setLlm,
+  setPublicKey,
+} from '../config';
+import type { LlmChoice, TransportType } from '../config';
+import { LlmSelect } from './LlmSelect';
 import { TransportSelect } from './TransportSelect';
 
 interface AppProps extends PipecatBaseChildProps {
@@ -32,6 +39,7 @@ export const App = ({
   }, [client]);
 
   const [publicKey, setKey] = useState(INITIAL_PUBLIC_KEY);
+  const [llm, setLlmChoice] = useState<LlmChoice>(DEFAULT_LLM);
 
   const showTransportSelector = availableTransports.length > 1;
 
@@ -63,6 +71,13 @@ export const App = ({
               }}
             />
           )}
+          <LlmSelect
+            llm={llm}
+            onLlmChange={(choice) => {
+              setLlmChoice(choice);
+              setLlm(choice);
+            }}
+          />
           <UserAudioControl size="lg" />
           <ConnectButton
             size="lg"

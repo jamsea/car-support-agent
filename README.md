@@ -8,7 +8,7 @@ A Pipecat AI voice agent built with a cascade pipeline (STT → LLM → TTS).
 - **Transport(s)**: Daily (WebRTC), SmallWebRTC
 - **Pipeline**: Cascade
   - **STT**: Deepgram Nova-3, Australian English (`en-AU`)
-  - **LLM**: OpenAI
+  - **LLM**: OpenAI `gpt-4.1`, or phoneLLM mini hosted by Deepgram (`phonellm-mini-alpha-2-fp8`). Pick one in the dropdown on the page.
   - **TTS**: Deepgram Flux TTS, Australian voice (`flux-sharon-en`)
 - **Turn detection**: Pipecat defaults (Silero VAD + local smart-turn)
 - **Conversation**: a 4-node Pipecat Flow, written as YAML in `server/flow.yaml`
@@ -60,6 +60,9 @@ for transcribing the bot, and OpenAI as the judge.
 
 Recordings land in `server/eval-runs/recordings/`.
 
+The evals use OpenAI by default. To run them against phoneLLM, start the bot with
+`LLM_SERVICE=phonellm uv run bot.py`.
+
 ### Client
 
 1. **Navigate to client directory**:
@@ -99,6 +102,7 @@ Recordings land in `server/eval-runs/recordings/`.
 car-support-agent/
 ├── server/              # Python bot server
 │   ├── bot.py           # Main bot implementation
+│   ├── deepgram_llm.py  # LLM service for Deepgram-hosted models (phoneLLM mini)
 │   ├── flow.yaml        # Front desk conversation flow (nodes, prompts, transitions)
 │   ├── handlers.py      # The Python tool the flow calls
 │   ├── evals/           # Audio eval scenarios and their cloud services
