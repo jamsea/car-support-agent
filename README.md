@@ -104,12 +104,12 @@ car-support-agent/
 │   ├── pyproject.toml   # Python dependencies
 │   ├── env.example      # Environment variables template
 │   ├── .env             # Your API keys (git-ignored)
-│   ├── Dockerfile       # Container image for Pipecat Cloud
 │   └── pcc-deploy.toml  # Pipecat Cloud deployment config
 ├── client/              # React application
 │   ├── src/             # Client source code
 │   ├── package.json     # Node dependencies
 │   └── ...
+├── Dockerfile           # Container image for Pipecat Cloud (built from the repo root)
 ├── .gitignore           # Git ignore patterns
 └── README.md            # This file
 ```

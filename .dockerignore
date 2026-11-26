@@ -1,0 +1,11 @@
+.git
+.github
+client
+server/.venv
+server/evals
+server/eval-runs
+server/.ruff_cache
+**/__pycache__
+.env
+.env.*
+.DS_Store

@@ -1,3 +1,5 @@
+# Build from the repo root: docker build -f Dockerfile .
+# Pipecat Cloud GitHub builds use the repo root as the build context.
 FROM dailyco/pipecat-base:latest
 
 # Enable bytecode compilation
@@ -11,10 +13,10 @@ ENV UV_LINK_MODE=copy
 
 # Install the project's dependencies using the lockfile and settings
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=server/uv.lock,target=uv.lock \
+    --mount=type=bind,source=server/pyproject.toml,target=pyproject.toml \
     uv sync --locked --no-install-project --no-dev
 
 # Copy the application code
-COPY ./bot.py bot.py
-COPY ./flow.py flow.py
+COPY ./server/bot.py bot.py
+COPY ./server/flow.py flow.py
