@@ -11,6 +11,10 @@ ENV UV_LINK_MODE=copy
 # Uncomment if you wish to print a summary of the features available in the base image
 # ENV PCC_LOG_FEATURES_SUMMARY=true
 
+# Publish each call's whole conversation (user, bot, and tool calls) to Pipecat Cloud
+# when the call ends. Off by default. Needs pipecat-ai 1.13 or later.
+ENV PCC_EVAL_CONVERSATIONS=true
+
 # Install the project's dependencies using the lockfile and settings
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=server/uv.lock,target=uv.lock \
