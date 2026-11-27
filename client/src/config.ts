@@ -78,24 +78,6 @@ const headers = publicKey
   ? new Headers({ Authorization: `Bearer ${publicKey}` })
   : undefined;
 
-export type LlmChoice = 'openai' | 'gemini';
-
-export const LLM_LABELS: Record<LlmChoice, string> = {
-  gemini: 'Gemini',
-  openai: 'OpenAI',
-};
-
-export const DEFAULT_LLM: LlmChoice = 'gemini';
-
-// Sent to the bot as the start request's `body`. Like `headers`, it is one
-// object changed in place, so picking an option does not rebuild the client.
-const startBody: { llm: LlmChoice } = { llm: DEFAULT_LLM };
-
-/** Use this LLM for the next call. */
-export function setLlm(llm: LlmChoice) {
-  startBody.llm = llm;
-}
-
 const dailyConfig: APIRequest = {
   endpoint: botStartUrl,
   headers,
@@ -103,7 +85,6 @@ const dailyConfig: APIRequest = {
     createDailyRoom: true,
     dailyRoomProperties: { start_video_off: true },
     transport: 'daily',
-    body: startBody,
   },
 };
 
@@ -114,7 +95,6 @@ const smallWebRTCConfig: APIRequest = {
     createDailyRoom: false,
     enableDefaultIceServers: true,
     transport: 'webrtc',
-    body: startBody,
   },
 };
 

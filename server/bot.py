@@ -15,7 +15,7 @@ tool is in handlers.py.
 
 Required AI services:
 - Deepgram Nova-3, Australian English (Speech-to-Text)
-- OpenAI or Google Gemini (LLM)
+- Google Gemini (LLM)
 - Deepgram Flux TTS, Australian voice (Text-to-Speech)
 
 Run the bot using::
@@ -47,7 +47,6 @@ from pipecat.runner.utils import create_transport
 from pipecat.services.deepgram.flux.tts import DeepgramFluxTTSService
 from pipecat.services.deepgram.stt import DeepgramSTTService
 from pipecat.services.google.llm import GoogleLLMService
-from pipecat.services.openai.llm import OpenAILLMService
 from pipecat.transcriptions.language import Language
 from pipecat.transports.base_transport import BaseTransport, TransportParams
 from pipecat.transports.daily.transport import DailyParams
@@ -60,14 +59,11 @@ load_dotenv(override=True)
 
 FLOW_CONFIG_PATH = Path(__file__).with_name("flow.yaml")
 
-# What the LLM dropdown on the web page can pick. The first is the default.
-LLM_CHOICES = ("gemini", "openai")
-
 # The store's time zone, used to tell the LLM the date and time of the call.
 STORE_TIMEZONE = ZoneInfo(os.getenv("STORE_TIMEZONE") or "Australia/Sydney")
 
 
-async def run_bot(transport: BaseTransport, llm_choice: str):
+async def run_bot(transport: BaseTransport):
     """Main bot logic."""
     logger.info("Starting bot")
 
@@ -98,24 +94,14 @@ async def run_bot(transport: BaseTransport, llm_choice: str):
     # checking" line, or chooses to stay quiet.
     wait_reassurance = WaitReassuranceLLMExtension(interval_secs=6.0)
 
-    if llm_choice == "gemini":
-        llm = GoogleLLMService(
-            api_key=os.getenv("GOOGLE_API_KEY"),
-            settings=GoogleLLMService.Settings(
-                # Flash-Lite is Gemini's small, low-latency model.
-                model=os.getenv("GEMINI_MODEL") or "gemini-3.5-flash-lite",
-                extensions=[wait_reassurance],
-            ),
-        )
-    else:
-        llm = OpenAILLMService(
-            api_key=os.getenv("OPENAI_API_KEY"),
-            settings=OpenAILLMService.Settings(
-                model=os.getenv("OPENAI_MODEL") or "gpt-4.1",
-                extensions=[wait_reassurance],
-            ),
-        )
-    logger.info(f"LLM: {llm_choice}")
+    llm = GoogleLLMService(
+        api_key=os.getenv("GOOGLE_API_KEY"),
+        settings=GoogleLLMService.Settings(
+            # Flash-Lite is Gemini's small, low-latency model.
+            model=os.getenv("GEMINI_MODEL") or "gemini-3.5-flash-lite",
+            extensions=[wait_reassurance],
+        ),
+    )
 
     # No user_turn_strategies here, so Pipecat's defaults apply: VAD starts a turn
     # and the local smart-turn model ends it.
@@ -224,15 +210,7 @@ async def bot(runner_args: RunnerArguments):
     }
 
     transport = await create_transport(runner_args, transport_params)
-    # The web client sends {"llm": ...} in the start request. LLM_SERVICE sets
-    # the default, which the evals use. Anything not on the list falls back to
-    # the default.
-    body = runner_args.body if isinstance(runner_args.body, dict) else {}
-    llm_choice = body.get("llm") or os.getenv("LLM_SERVICE")
-    if llm_choice not in LLM_CHOICES:
-        llm_choice = LLM_CHOICES[0]
-
-    await run_bot(transport, llm_choice)
+    await run_bot(transport)
 
 
 if __name__ == "__main__":

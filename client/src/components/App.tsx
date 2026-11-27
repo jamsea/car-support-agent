@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import type { PipecatBaseChildProps } from '@pipecat-ai/voice-ui-kit';
 import {
@@ -8,13 +8,7 @@ import {
   UserAudioControl,
 } from '@pipecat-ai/voice-ui-kit';
 
-import {
-  DEFAULT_LLM,
-  LLM_LABELS,
-  setLlm,
-} from '../config';
-import type { LlmChoice, TransportType } from '../config';
-import { OptionSelect } from './OptionSelect';
+import type { TransportType } from '../config';
 import { TransportSelect } from './TransportSelect';
 
 interface AppProps extends PipecatBaseChildProps {
@@ -35,8 +29,6 @@ export const App = ({
     client?.initDevices();
   }, [client]);
 
-  const [llm, setLlmChoice] = useState<LlmChoice>(DEFAULT_LLM);
-
   const showTransportSelector = availableTransports.length > 1;
 
   return (
@@ -52,15 +44,6 @@ export const App = ({
           <div /> /* Spacer */
         )}
         <div className="flex items-center gap-4">
-          <OptionSelect
-            guide="LLM"
-            labels={LLM_LABELS}
-            value={llm}
-            onChange={(choice) => {
-              setLlmChoice(choice);
-              setLlm(choice);
-            }}
-          />
           <UserAudioControl size="lg" />
           <ConnectButton
             size="lg"
