@@ -8,7 +8,7 @@ A Pipecat AI voice agent built with a cascade pipeline (STT → LLM → TTS).
 - **Transport(s)**: Daily (WebRTC), SmallWebRTC
 - **Pipeline**: Cascade
   - **STT**: Deepgram Nova-3, Australian English (`en-AU`)
-  - **LLM**: Google `gemini-3.5-flash-lite` (default) or OpenAI `gpt-4.1`. Pick one in the dropdown on the page.
+  - **LLM**: Google `gemini-3.5-flash-lite`
   - **TTS**: Deepgram Flux TTS, Australian voice (`flux-sharon-en`)
 - **Turn detection**: Pipecat defaults (Silero VAD + local smart-turn)
 - **Conversation**: a 4-node Pipecat Flow, written as YAML in `server/flow.yaml`
@@ -59,9 +59,6 @@ for transcribing the bot, and OpenAI as the judge.
    ```
 
 Recordings land in `server/eval-runs/recordings/`.
-
-The evals use Gemini by default. To run them against OpenAI, start the bot with
-`LLM_SERVICE=openai uv run bot.py`.
 
 ### Client
 
